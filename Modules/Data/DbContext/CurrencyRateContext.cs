@@ -12,8 +12,9 @@ namespace currency_rate
             var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
             var port = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
             var user = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
-            var pass = Environment.GetEnvironmentVariable("DB_PASS") ?? "4100";
+            var pass = Environment.GetEnvironmentVariable("DB_PASS") ?? "6247";
             optionsBuilder.UseNpgsql($"Host={host};Port={port};Database=Currency;Username={user};Password={pass}");
+            optionsBuilder.EnableSensitiveDataLogging();
         }
 
         protected override void OnModelCreating(ModelBuilder builder)

@@ -1,5 +1,4 @@
 ﻿using currency_rate;
-using System.Text;
 
 namespace CurrencyLoader
 {
@@ -7,16 +6,20 @@ namespace CurrencyLoader
     {
         static async Task Main(string[] args)
         {
+            Console.WriteLine($"Time start: {DateTime.Now}");
+            
             using (var _context = new CurrencyRateContext())
             {
                 _context.Database.EnsureCreated();
             }
+            
             var service = new CurrencyService();
 
-            await service.DailyAsync();
+            await service.FillRatesDailyAsync();
 
-            await service.FillRatesForLastMonthAsync();
+            await service.FillRatesMonthlyAsync();
 
+            Console.WriteLine($"Time end: {DateTime.Now}");
         }
     }
 }
