@@ -1,55 +1,51 @@
-﻿using currency_rate;
+﻿using System.Globalization;
 using System.Xml.Linq;
-using System.Globalization;
+using CurrencyRate.Bll.Helpers.Interfaces;
+using CurrencyRate.Bll.Models.Dtos;
 
-namespace CurrencyLoader;
+namespace CurrencyRate.Bll.Helpers;
 
-public class XmlRatesParcer
+internal class XmlRatesParser : IXmlRatesParser
 {
-    
     private readonly CultureInfo _cultureInfo = new("ru-RU");
-    
-    public List<CurrencyRate> ParceXmlToRates(string xml, DateOnly currentDate)
+
+    public List<(CurrencyDto, RateDto)> ParseXmlToRates(string xml, DateOnly currentDate)
     {
         var document = XDocument.Parse(xml);
-        var rates = new List<CurrencyRate>();
-
         if (!ValidateXml(document, currentDate))
         {
             Console.WriteLine("The dates in the document and in the request differ.");
-            return rates;
+            return new List<(CurrencyDto, RateDto)>();
         }
-        
+
         var date = DateOnly.ParseExact(document.Root.Attribute("Date").Value, "dd.MM.yyyy");
-        
-        foreach (var element in document.Descendants("Valute"))
+
+        return document.Descendants("Valute").Select(element =>
         {
-            var rate = new CurrencyRate
+            var currencyDto = new CurrencyDto
             {
-                ID = element.Attribute("ID").Value,
+                CurrencyID = element.Attribute("ID").Value,
                 NumCode = ushort.Parse(element.Element("NumCode").Value),
                 CharCode = element.Element("CharCode").Value,
                 Nominal = int.Parse(element.Element("Nominal").Value),
                 Name = element.Element("Name").Value,
+            };
+            var rateDto = new RateDto
+            {
+                CurrencyID = element.Attribute("ID").Value,
                 Value = decimal.Parse(element.Element("Value").Value, _cultureInfo),
                 VunitRate = double.Parse(element.Element("VunitRate").Value, _cultureInfo),
-                Date = date
+                Date = date,
             };
-            rates.Add(rate);
-        }
-        return rates;
+            
+            return (currencyDto, rateDto);
+        }).ToList();
     }
-    
+
     //Функция для проверки, соответствует ли полученный отчет по дате от запрошенной даты
     private bool ValidateXml(XDocument document, DateOnly currentDate)
     {
         var date = DateOnly.ParseExact(document.Root.Attribute("Date").Value, "dd.MM.yyyy");
-
-        if (currentDate != date)
-        {
-            return false;
-        }
-
-        return true;
+        return currentDate == date;
     }
 }

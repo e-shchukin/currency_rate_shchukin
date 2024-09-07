@@ -1,12 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CurrencyRate.Dal.DbEntities;
+using Microsoft.EntityFrameworkCore;
 
-namespace currency_rate
+namespace CurrencyRate.Dal.DbContext
 {
-    public class CurrencyRateContext : DbContext
+    internal class CurrencyRateContext : Microsoft.EntityFrameworkCore.DbContext
     {
-        public DbSet<Rate> Rates { get; set; }
+        
         public DbSet<Currency> Currencies { get; set; }
-
+        public DbSet<Rate> Rates { get; set; }
+        
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
@@ -20,6 +22,8 @@ namespace currency_rate
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<Rate>().HasKey(e => new { e.CurrencyID, e.Date });
+            
+            
         }
     }
 }

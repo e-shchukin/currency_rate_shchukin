@@ -1,8 +1,13 @@
-﻿using System.Text;
+﻿#region
 
-namespace CurrencyLoader.Modules.Api;
+using System.Text;
+using CurrencyRate.Bll.Api.Interfaces;
 
-public class CbrApiClient
+#endregion
+
+namespace CurrencyRate.Bll.Api;
+
+internal class CbrApiClient : ICbrApiClient
 {
     private const string CbrCurrencyRatesUrl = "https://www.cbr.ru/scripts/XML_daily.asp";
     private readonly Encoding _encoding;
@@ -12,7 +17,7 @@ public class CbrApiClient
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         _encoding = Encoding.GetEncoding("windows-1251");
     }
-    
+
     public async Task<string> GetRatesForDateAsync(DateOnly date)
     {
         var url = $"{CbrCurrencyRatesUrl}?date_req={date:dd/MM/yyyy}";
@@ -22,7 +27,7 @@ public class CbrApiClient
             response.EnsureSuccessStatusCode();
 
             var responseStream = await response.Content.ReadAsStreamAsync();
-            using (var reader = new System.IO.StreamReader(responseStream, _encoding))
+            using (var reader = new StreamReader(responseStream, _encoding))
             {
                 return await reader.ReadToEndAsync();
             }
