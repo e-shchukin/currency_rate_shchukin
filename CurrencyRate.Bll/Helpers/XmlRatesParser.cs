@@ -2,19 +2,26 @@
 using System.Xml.Linq;
 using CurrencyRate.Bll.Helpers.Interfaces;
 using CurrencyRate.Bll.Models.Dtos;
+using Microsoft.Extensions.Logging;
 
 namespace CurrencyRate.Bll.Helpers;
 
 internal class XmlRatesParser : IXmlRatesParser
 {
     private readonly CultureInfo _cultureInfo = new("ru-RU");
-
+    private readonly ILogger<XmlRatesParser> _logger;
+    
+    public XmlRatesParser(ILogger<XmlRatesParser> logger)
+    {
+        _logger = logger;
+    }
+    
     public List<(CurrencyDto, RateDto)> ParseXmlToRates(string xml, DateOnly currentDate)
     {
         var document = XDocument.Parse(xml);
         if (!ValidateXml(document, currentDate))
         {
-            Console.WriteLine("The dates in the document and in the request differ.");
+            _logger.LogError("XML validation failed. Dates in the document and in the request differ.");
             return new List<(CurrencyDto, RateDto)>();
         }
 

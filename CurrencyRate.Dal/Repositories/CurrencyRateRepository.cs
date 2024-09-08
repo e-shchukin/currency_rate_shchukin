@@ -1,11 +1,20 @@
 ﻿using CurrencyRate.Dal.DbContext;
 using CurrencyRate.Dal.DbEntities;
 using CurrencyRate.Dal.Repositories.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace CurrencyRate.Dal.Repositories;
 
 public class CurrencyRateRepository : ICurrencyRateRepository
 {
+    private readonly ILogger<CurrencyRateRepository> _logger;
+    
+    
+    public CurrencyRateRepository(ILogger<CurrencyRateRepository> logger)
+    {
+        _logger = logger;
+    }
+    
     public async Task SaveRatesToDb(List<(Currency, Rate)> ratesList)
     {
         using (var сurrencyRateContext = new CurrencyRateContext())
@@ -53,7 +62,7 @@ public class CurrencyRateRepository : ICurrencyRateRepository
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message);
             }
         }
     }
