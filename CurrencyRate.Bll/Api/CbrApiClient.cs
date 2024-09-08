@@ -1,9 +1,5 @@
-﻿#region
-
-using System.Text;
+﻿using System.Text;
 using CurrencyRate.Bll.Api.Interfaces;
-
-#endregion
 
 namespace CurrencyRate.Bll.Api;
 
@@ -21,16 +17,13 @@ internal class CbrApiClient : ICbrApiClient
     public async Task<string> GetRatesForDateAsync(DateOnly date)
     {
         var url = $"{CbrCurrencyRatesUrl}?date_req={date:dd/MM/yyyy}";
-        using (var client = new HttpClient())
-        {
-            var response = await client.GetAsync(url);
-            response.EnsureSuccessStatusCode();
+        
+        using var client = new HttpClient();
+        var response = await client.GetAsync(url);
+        response.EnsureSuccessStatusCode();
 
-            var responseStream = await response.Content.ReadAsStreamAsync();
-            using (var reader = new StreamReader(responseStream, _encoding))
-            {
-                return await reader.ReadToEndAsync();
-            }
-        }
+        var responseStream = await response.Content.ReadAsStreamAsync();
+        using var reader = new StreamReader(responseStream, _encoding);
+        return await reader.ReadToEndAsync();
     }
 }

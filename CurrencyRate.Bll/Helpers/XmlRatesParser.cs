@@ -10,18 +10,19 @@ internal class XmlRatesParser : IXmlRatesParser
 {
     private readonly CultureInfo _cultureInfo = new("ru-RU");
     private readonly ILogger<XmlRatesParser> _logger;
-    
+
     public XmlRatesParser(ILogger<XmlRatesParser> logger)
     {
         _logger = logger;
     }
-    
+
     public List<(CurrencyDto, RateDto)> ParseXmlToRates(string xml, DateOnly currentDate)
     {
         var document = XDocument.Parse(xml);
+        
         if (!ValidateXml(document, currentDate))
         {
-            _logger.LogError("XML validation failed. Dates in the document and in the request differ.");
+            _logger.LogError("XML validation failed: Dates in the document and in the request differ");
             return new List<(CurrencyDto, RateDto)>();
         }
 
@@ -35,24 +36,31 @@ internal class XmlRatesParser : IXmlRatesParser
                 NumCode = ushort.Parse(element.Element("NumCode").Value),
                 CharCode = element.Element("CharCode").Value,
                 Nominal = int.Parse(element.Element("Nominal").Value),
-                Name = element.Element("Name").Value,
+                Name = element.Element("Name").Value
             };
             var rateDto = new RateDto
             {
                 CurrencyID = element.Attribute("ID").Value,
                 Value = decimal.Parse(element.Element("Value").Value, _cultureInfo),
                 VunitRate = double.Parse(element.Element("VunitRate").Value, _cultureInfo),
-                Date = date,
+                Date = date
             };
-            
+
             return (currencyDto, rateDto);
         }).ToList();
     }
 
-    //Функция для проверки, соответствует ли полученный отчет по дате от запрошенной даты
+    /// Функция для проверки, соответствует ли полученный отчет по дате от запрошенной даты
     private bool ValidateXml(XDocument document, DateOnly currentDate)
     {
-        var date = DateOnly.ParseExact(document.Root.Attribute("Date").Value, "dd.MM.yyyy");
-        return currentDate == date;
+        var date = document.Root?.Attribute("Date")?.Value;
+        
+        if (date == null)
+        {
+            return false;
+        }
+        
+        var parsedDate = DateOnly.ParseExact(document.Root!.Attribute("Date")!.Value, "dd.MM.yyyy");
+        return currentDate == parsedDate;
     }
 }

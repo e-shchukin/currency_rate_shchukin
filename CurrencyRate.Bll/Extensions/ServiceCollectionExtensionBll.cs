@@ -15,10 +15,10 @@ public static class ServiceCollectionExtensionBll
         serviceCollection.AddScoped<ICbrApiClient, CbrApiClient>();
         serviceCollection.AddScoped<IXmlRatesParser, XmlRatesParser>();
         serviceCollection.AddMapping();
-        
+
         return serviceCollection;
     }
-    
+
     private static void AddMapping(this IServiceCollection serviceCollection)
     {
         var config = TypeAdapterConfig.GlobalSettings;

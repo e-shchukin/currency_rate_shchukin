@@ -1,6 +1,7 @@
 ﻿using CurrencyRate.Dal.DbContext;
 using CurrencyRate.Dal.DbEntities;
 using CurrencyRate.Dal.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace CurrencyRate.Dal.Repositories;
@@ -8,57 +9,56 @@ namespace CurrencyRate.Dal.Repositories;
 public class CurrencyRateRepository : ICurrencyRateRepository
 {
     private readonly ILogger<CurrencyRateRepository> _logger;
-    
-    
-    public CurrencyRateRepository(ILogger<CurrencyRateRepository> logger)
+    private readonly CurrencyRateContext _context;
+
+    public CurrencyRateRepository(
+        CurrencyRateContext context, 
+        ILogger<CurrencyRateRepository> logger)
     {
+        _context = context;
         _logger = logger;
     }
-    
+
     public async Task SaveRatesToDb(List<(Currency, Rate)> ratesList)
     {
-        using (var сurrencyRateContext = new CurrencyRateContext())
-        {
-            await ProcessCurrencyRate(сurrencyRateContext, ratesList);
-            await сurrencyRateContext.SaveChangesAsync();
-        }
+        await ProcessCurrencyRate(ratesList);
+        await _context.SaveChangesAsync();
     }
 
     public async Task SaveRatesToDb(List<List<(Currency, Rate)>> ratesList)
     {
-        using (var сurrencyRateContext = new CurrencyRateContext())
+        foreach (var currencyRate in ratesList)
         {
-            foreach (var currencyRate in ratesList)
-            {
-                await ProcessCurrencyRate(сurrencyRateContext, currencyRate);
-            }
-            await сurrencyRateContext.SaveChangesAsync();
+            await ProcessCurrencyRate(currencyRate);
         }
+        
+        await _context.SaveChangesAsync();
     }
 
-    private async Task ProcessCurrencyRate(CurrencyRateContext сurrencyRateContext, List<(Currency, Rate)> currencyRatePairs)
+    private async Task ProcessCurrencyRate(List<(Currency Currency, Rate Rate)> currencyRatePairs)
     {
         foreach (var currencyRatePair in currencyRatePairs)
         {
-            var currency = currencyRatePair.Item1;
-            var rate = currencyRatePair.Item2;
+            var currency = currencyRatePair.Currency;
+            var rate = currencyRatePair.Rate;
+            
             try
             {
-                var rateAlreadyExists =
-                    сurrencyRateContext.Rates.Any(e =>
-                        e.Date == rate.Date && e.CurrencyID == rate.CurrencyID);
+                var rateAlreadyExists = await _context.Rates
+                    .AnyAsync(e => e.Date == rate.Date && e.CurrencyID == rate.CurrencyID);
 
                 if (rateAlreadyExists) continue;
 
-                var currencyAlreadyExists =
-                    сurrencyRateContext.Currencies.Any(e => e.CurrencyID == currency.CurrencyID);
+                var currencyAlreadyExists = await _context.Currencies
+                    .AnyAsync(e => e.CurrencyID == currency.CurrencyID);
 
                 if (!currencyAlreadyExists)
                 {
-                    сurrencyRateContext.Currencies.Add(currency);
+                    _context.Currencies.Add(currency);
+                    await _context.SaveChangesAsync();
                 }
 
-                сurrencyRateContext.Rates.Add(rate);
+                _context.Rates.Add(rate);
             }
             catch (Exception ex)
             {
