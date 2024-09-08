@@ -10,6 +10,4 @@ public class Rate
 
     public DateOnly Date { get; set; }
 
-    //[ForeignKey(nameof(CurrencyID))]
-    //public Currency Currency { get; set; }
 }

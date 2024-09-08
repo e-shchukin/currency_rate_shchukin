@@ -11,7 +11,5 @@ public class Currency
     public int Nominal { get; set; }
 
     public string Name { get; set; }
-
-    //TODO
-    //public List<Rate> Rates { get; set; }
+    
 }
